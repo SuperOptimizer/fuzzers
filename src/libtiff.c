@@ -135,3 +135,48 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
     TIFFClose(tif);
     return 0;
 }
+
+
+#ifndef FUZZING
+int main(int argc, char** argv) {
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s <tiff_file>\n", argv[0]);
+        return 1;
+    }
+
+    // Open and read the file
+    FILE *f = fopen(argv[1], "rb");
+    if (!f) {
+        fprintf(stderr, "Could not open file: %s\n", argv[1]);
+        return 1;
+    }
+
+    // Get file size
+    fseek(f, 0, SEEK_END);
+    size_t size = ftell(f);
+    fseek(f, 0, SEEK_SET);
+
+    // Read file content
+    uint8_t *data = (uint8_t*)malloc(size);
+    if (!data) {
+        fprintf(stderr, "Could not allocate memory\n");
+        fclose(f);
+        return 1;
+    }
+
+    size_t read_size = fread(data, 1, size, f);
+    fclose(f);
+
+    if (read_size != size) {
+        fprintf(stderr, "Could not read entire file\n");
+        free(data);
+        return 1;
+    }
+
+    // Call the fuzzer test function
+    int result = LLVMFuzzerTestOneInput(data, size);
+
+    free(data);
+    return result;
+}
+#endif
