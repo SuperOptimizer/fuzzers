@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-import targets.libtiff
+
 
 # fuzzers/
 #   bin/ # where c harness executables go
@@ -14,7 +14,7 @@ BUILDDIR = f"{ROOTDIR}/build" # where the git repos are checked out and built
 BINDIR = f"{ROOTDIR}/bin" # where our fuzzer harness executables go
 SRCDIR = f"{ROOTDIR}/src" # where our fuzzer harness code goes
 
-VARIANTS = ["fuzz","cmpcov", "redqueen", "asan", "msan", "ubsan", "cfisan", "lsan"]
+VARIANTS = ["nofuzz", "fuzz","cmpcov", "redqueen", "asan", "msan", "ubsan", "cfisan", "lsan"]
 CONFIGS = ["CC","CXX","CFLAGS","CXXFLAGS"]
 
 
@@ -24,17 +24,16 @@ def get_env( do_fuzz: bool, variant: str = "fuzz", opt: str = "-O3"):
     env['LINKPATHS'] = " "
     env['LDFLAGS']   = " "
 
-
     if do_fuzz:
         env.update({"CC": "afl-clang-lto", "CXX": "afl-clang-lto++"})
     else:
         env.update({"CC": "clang", "CXX": "clang"})
 
-    env.update({"CFLAGS": f" {opt} -flto -g3 ", "CXXFLAGS": f" {opt} -flto -g3 "})
+    fuzz_str = "-DFUZZING" if do_fuzz else ""
+    env.update({"CFLAGS": f" {opt} -flto -g3 {fuzz_str} ", "CXXFLAGS": f" {opt} -flto -g3 {fuzz_str} "})
 
     if variant not in VARIANTS:
         raise Exception
-
 
     if variant == "cmpcov":
         env['AFL_LLVM_LAF_ALL']="1"
@@ -55,7 +54,6 @@ def get_env( do_fuzz: bool, variant: str = "fuzz", opt: str = "-O3"):
     elif variant == "lsan":
         env['AFL_USE_LSAN']="1"
         env['CFLAGS'] = " " + env['CFLAGS'] + " -fsanitize=leak"
-
 
     return env
 
@@ -80,7 +78,7 @@ def build_cmake(gitpath, variant, env, cmake_flags) -> None:
     vdir = f"{gitpath}/build_{variant}"
     os.makedirs(vdir, exist_ok=True)
     subprocess.run(cmake_cmd, cwd = vdir, env=env, check=True)
-    subprocess.run(["/usr/bin/make", "-j8"], cwd = vdir, env=env, check=True)
+    subprocess.run(["/usr/bin/make", "-j16"], cwd = vdir, env=env, check=True)
 
 
 
@@ -107,5 +105,7 @@ def build_exe(main, libs, variant, env) -> None:
 
 
 if __name__ == "__main__":
-    import targets
-    targets.libtiff.libtiff()
+    import targets.libtiff
+    import targets.libjpeg_turbo
+    #targets.libtiff.libtiff()
+    targets.libjpeg_turbo.libjpeg_turbo()
