@@ -1,3 +1,0 @@
-[submodule "libpng_fuzz/libpng"]
-	path = libpng_fuzz/libpng
-	url = https://github.com/pnggroup/libpng.git

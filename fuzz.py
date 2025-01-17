@@ -65,7 +65,7 @@ def get_env(target, variant, do_fuzz: bool, opt: str = "-O3"):
 
 def git_checkout(env, giturl, name):
     if not os.path.exists(expand(env, "{TARGETDIR}/{name}").format(name=name)):
-        subprocess.run(["git", "clone", giturl, name], check=True, cwd=expand(env,"{TARGETDIR}"))
+        subprocess.run(["git", "clone", "--depth", "1", giturl, name], check=True, cwd=expand(env,"{TARGETDIR}"))
 
 
 def build_cmake(env, gitpath, variant, cmake_flags) -> None:

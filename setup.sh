@@ -10,3 +10,9 @@ git clone https://github.com/AFLplusplus/AFLplusplus
 cd AFLplusplus
 make distrib PERFORMANCE=1 STATIC=1
 sudo make install
+
+#syzkaller stuff
+sudo apt update
+sudo apt install make gcc flex bison libncurses-dev libelf-dev libssl-dev build-essential binutils
+sudo apt install debootstrap
+sudo apt install qemu-system-x86
