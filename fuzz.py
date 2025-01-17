@@ -1,39 +1,45 @@
 import os
 import subprocess
 
+def expand(env, s):
+    while '{' in s:
+        old_s = s
+        for k, v in env.items():
+            s = s.replace('{' + k + '}', v)
+        if old_s == s:  # No more expansions possible but still has brackets - likely an undefined variable
+            break
+    return s
 
-
-# fuzzers/
-#   bin/ # where c harness executables go
-#   build/ # where git projects are checked out
-#   src/ # .c harnesses
-#   targets/ # py fuzzing scripts
-
-ROOTDIR = os.path.abspath(os.path.dirname(__file__)) # where the top level fuzzers dir goes
-BUILDDIR = f"{ROOTDIR}/build" # where the git repos are checked out and built
-BINDIR = f"{ROOTDIR}/bin" # where our fuzzer harness executables go
-SRCDIR = f"{ROOTDIR}/src" # where our fuzzer harness code goes
 
 VARIANTS = ["nofuzz", "fuzz","cmpcov", "redqueen", "asan", "msan", "ubsan", "cfisan", "lsan"]
-CONFIGS = ["CC","CXX","CFLAGS","CXXFLAGS"]
 
-
-def get_env( do_fuzz: bool, variant: str = "fuzz", opt: str = "-O3"):
+def get_env(target, variant, do_fuzz: bool, opt: str = "-O3"):
     env = os.environ.copy()
-    env['INCPATHS']  = " "
-    env['LINKPATHS'] = " "
-    env['LDFLAGS']   = " "
+
+    env["TARGET"] = target
+    env["VARIANT"] = variant
+
+    env["ROOTDIR"] = os.path.abspath(os.path.dirname(__file__))
+    env["TARGETDIR"] = "{ROOTDIR}/targets/{TARGET}"
+    env['GITDIR'] = "{TARGETDIR}/{TARGET}"
+    env["BUILDDIR"] = "{ROOTDIR}/build/{TARGET}/{VARIANT}"
+    env["BINDIR"] = "{BUILDDIR}/bin"
+    env["SRCDIR"] = "{TARGETDIR}/src"
+    env["INCPATHS"] = " -I{GITDIR} -I{GITDIR}/include "
+    env["LINKPATHS"] = " -L{BUILDDIR} "
+    env["LDFLAGS"] = " "
 
     if do_fuzz:
-        env.update({"CC": "afl-clang-lto", "CXX": "afl-clang-lto++"})
+        env["CC"] = "afl-clang-lto"
+        env["CXX"] = "afl-clang-lto++"
     else:
-        env.update({"CC": "clang", "CXX": "clang"})
+        env["CC"] = "clang"
+        env["CXX"]= "clang"
 
     fuzz_str = "-DFUZZING" if do_fuzz else ""
-    env.update({"CFLAGS": f" {opt} -flto -g3 {fuzz_str} ", "CXXFLAGS": f" {opt} -flto -g3 {fuzz_str} "})
 
-    if variant not in VARIANTS:
-        raise Exception
+    env["CFLAGS"]   = f" {opt} -flto -g3 {fuzz_str} "
+    env["CXXFLAGS"] = f" {opt} -flto -g3 {fuzz_str} "
 
     if variant == "cmpcov":
         env['AFL_LLVM_LAF_ALL']="1"
@@ -57,15 +63,15 @@ def get_env( do_fuzz: bool, variant: str = "fuzz", opt: str = "-O3"):
 
     return env
 
-def get_lib(giturl, name):
-    if not os.path.exists(f"{BUILDDIR}/{name}"):
-        subprocess.run(["git", "clone", giturl, name], check=True, cwd=BUILDDIR)
+def git_checkout(env, giturl, name):
+    if not os.path.exists(expand(env, "{TARGETDIR}/{name}").format(name=name)):
+        subprocess.run(["git", "clone", giturl, name], check=True, cwd=expand(env,"{TARGETDIR}"))
 
 
-def build_cmake(gitpath, variant, env, cmake_flags) -> None:
+def build_cmake(env, gitpath, variant, cmake_flags) -> None:
 
     cmake_cmd = [
-        "/usr/bin/cmake", "..",
+        "/usr/bin/cmake", gitpath,
         cmake_flags,
         f"-DCMAKE_C_COMPILER={env['CC']}",
         f"-DCMAKE_CXX_COMPILER={env['CXX']}",
@@ -75,17 +81,17 @@ def build_cmake(gitpath, variant, env, cmake_flags) -> None:
         "-DCMAKE_LINKER_TYPE=LLD"
     ]
 
-    vdir = f"{gitpath}/build_{variant}"
+    vdir = expand(env, "{BUILDDIR}")
     os.makedirs(vdir, exist_ok=True)
     subprocess.run(cmake_cmd, cwd = vdir, env=env, check=True)
     subprocess.run(["/usr/bin/make", "-j16"], cwd = vdir, env=env, check=True)
 
 
 
-def build_exe(main, libs, variant, env) -> None:
+def build_exe(env, main, libs, variant) -> None:
 
     fuzzing_args = ['-DFUZZING', '-fsanitize=fuzzer'] if variant != "nofuzz" else []
-    compile_cmd = [
+    compile_cmd = " ".join([
         env['CC'], main, *libs,
         "-o", f"{main.replace('src/','bin/')}.{variant}.elf",
         *env['INCPATHS'].split(),
@@ -97,15 +103,13 @@ def build_exe(main, libs, variant, env) -> None:
         "-O0",
 
         *fuzzing_args
-    ]
+    ])
     print("asdf")
+    compile_cmd = expand(env, compile_cmd)
 
-    subprocess.run(compile_cmd, env=env, check=True, cwd=ROOTDIR)
+    subprocess.run(compile_cmd.split(), env=env, check=True, cwd=expand(env,"{ROOTDIR}"))
 
 
 
 if __name__ == "__main__":
-    import targets.libtiff
-    import targets.libjpeg_turbo
-    #targets.libtiff.libtiff()
-    targets.libjpeg_turbo.libjpeg_turbo()
+    pass
