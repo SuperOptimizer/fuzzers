@@ -27,20 +27,20 @@ def syzcaller():
     shutil.copyfile(f"{REALTARGETDIR}/.config.kmsan",f"{TARGETDIR}/linux_kmsan/.config")
     shutil.copyfile(f"{REALTARGETDIR}/.config.ubsan",f"{TARGETDIR}/linux_ubsan/.config")
 
-    subprocess.run(f"make olddefconfig".split(), cwd=f"{TARGETDIR}/linux")
-    subprocess.run(f"make  -j32".split(), cwd=f"{TARGETDIR}/linux")
+    subprocess.run(f"make LLVM=1 olddefconfig".split(), cwd=f"{TARGETDIR}/linux")
+    subprocess.run(f"make LLVM=1  -j32".split(), cwd=f"{TARGETDIR}/linux")
 
-    subprocess.run(f"make olddefconfig".split(), cwd=f"{TARGETDIR}/linux_kasan")
-    subprocess.run(f"make  -j32".split(), cwd=f"{TARGETDIR}/linux_kasan")
+    subprocess.run(f"make LLVM=1 olddefconfig".split(), cwd=f"{TARGETDIR}/linux_kasan")
+    subprocess.run(f"make LLVM=1  -j32".split(), cwd=f"{TARGETDIR}/linux_kasan")
 
-    subprocess.run(f"make olddefconfig".split(), cwd=f"{TARGETDIR}/linux_kcsan")
-    subprocess.run(f"make  -j32".split(), cwd=f"{TARGETDIR}/linux_kcsan")
+    subprocess.run(f"make LLVM=1 olddefconfig".split(), cwd=f"{TARGETDIR}/linux_kcsan")
+    subprocess.run(f"make LLVM=1  -j32".split(), cwd=f"{TARGETDIR}/linux_kcsan")
 
-    subprocess.run(f"make olddefconfig".split(), cwd=f"{TARGETDIR}/linux_kmsan")
-    subprocess.run(f"make  -j32".split(), cwd=f"{TARGETDIR}/linux_kmsan")
+    subprocess.run(f"make LLVM=1 olddefconfig".split(), cwd=f"{TARGETDIR}/linux_kmsan")
+    subprocess.run(f"make LLVM=1  -j32".split(), cwd=f"{TARGETDIR}/linux_kmsan")
 
-    subprocess.run(f"make olddefconfig".split(), cwd=f"{TARGETDIR}/linux_ubsan")
-    subprocess.run(f"make  -j32".split(), cwd=f"{TARGETDIR}/linux_ubsan")
+    subprocess.run(f"make LLVM=1 olddefconfig".split(), cwd=f"{TARGETDIR}/linux_ubsan")
+    subprocess.run(f"make LLVM=1  -j32".split(), cwd=f"{TARGETDIR}/linux_ubsan")
 
     #subprocess.run("wget https://raw.githubusercontent.com/google/syzkaller/master/tools/create-image.sh".split(),cwd="/tmp")
     #subprocess.run("chmod +x ./create-image.sh".split(),cwd="/tmp")
