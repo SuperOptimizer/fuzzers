@@ -3,9 +3,11 @@ import os
 import subprocess
 import shutil
 
-#subprocess.run("wget https://raw.githubusercontent.com/google/syzkaller/master/tools/create-image.sh".split(),cwd="/tmp")
-#subprocess.run("chmod +x ./create-image.sh".split(),cwd="/tmp")
-#subprocess.run("sudo ./create-image.sh".split(),cwd="/tmp")
+# cd /tmp
+# wget https://raw.githubusercontent.com/google/syzkaller/master/tools/create-image.sh
+# chmod +x ./create-image.sh
+# sudo bash create-image.sh
+# sudo chown -R forrest ./bullseye*
 #then sudo chown -R the id pub rsa to the current user!!! very important
 
 TARGET = "syzkaller"
@@ -56,6 +58,11 @@ CONFIG_DETECT_HUNG_TASK=y
 CONFIG_WQ_WATCHDOG=y
 CONFIG_DEFAULT_HUNG_TASK_TIMEOUT=140
 CONFIG_RCU_CPU_STALL_TIMEOUT=100
+
+CONFIG_LTO=y
+CONFIG_LTO_CLANG=y
+CONFIG_LTO_CLANG_FULL=y
+
 '''
 
 kasan_flags = '''
@@ -109,11 +116,14 @@ def syzcaller():
         if variant == "_ubsan":
             flags += ubsan_flags
         subprocess.run(f"make mrproper".split(), cwd=f"{TARGETDIR}/linux{variant}")
-        subprocess.run(f"make LLVM=1 CC=clang defconfig".split(), cwd=f"{TARGETDIR}/linux{variant}")
-        subprocess.run(f"make LLVM=1 CC=clang kvm_guest.config".split(), cwd=f"{TARGETDIR}/linux{variant}")
+        subprocess.run(f"make LLVM=1 CC=ccache_clang allmodconfig".split(), cwd=f"{TARGETDIR}/linux{variant}")
+        subprocess.run(f"make LLVM=1 CC=ccache_clang kvm_guest.config".split(), cwd=f"{TARGETDIR}/linux{variant}")
         write_config_flags(f"{TARGETDIR}/linux{variant}/.config", flags)
-        subprocess.run(f"make LLVM=1 CC=clang olddefconfig".split(), cwd=f"{TARGETDIR}/linux{variant}")
-        subprocess.run(f"make LLVM=1 CC=clang -j32".split(), cwd=f"{TARGETDIR}/linux{variant}")
+        subprocess.run(f"make LLVM=1 CC=ccache_clang olddefconfig".split(), cwd=f"{TARGETDIR}/linux{variant}")
+        subprocess.run(f"make LLVM=1 CC=ccache_clang -j32".split(), cwd=f"{TARGETDIR}/linux{variant}")
+
+        subprocess.run("cp /tmp/bullseye.img /tmp/bullseye.id_rsa.pub /tmp/bullseye.id_rsa . ".split(),cwd=f"{TARGETDIR}/linux{variant}")
+
 
 
 
