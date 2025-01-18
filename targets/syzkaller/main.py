@@ -1,28 +1,32 @@
 import fuzz
 import os
 import subprocess
+import shutil
 
 TARGET = "syzkaller"
 GITURL = "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
 
-CMAKE_FLAGS = " -DBUILD_SHARED_LIBS=OFF -Dtiff-docs=OFF -Dtiff-contrib=OFF -Dtiff-tests=OFF -Dtiff-tools=OFF "
-LDFLAGS = " -lm -lz -lzstd -ldeflate -llzma -ljpeg -ljbig -lLerc -lwebp "
-
-
-
 def syzcaller():
     env = fuzz.get_env(TARGET,"nofuzz",False)
+
+    TARGETDIR = fuzz.expand(env, "{TARGETDIR}")
     fuzz.git_checkout(env,GITURL,"linux")
-    subprocess.run("cp .config ./linux".split(), cwd= fuzz.expand(env,"{TARGETDIR}"))
-    subprocess.run("make olddefconfig".split(), cwd= fuzz.expand(env,"{TARGETDIR}/linux"))
-    subprocess.run("make -j32".split(), cwd= fuzz.expand(env,"{TARGETDIR}/linux"))
-    cwd = fuzz.expand(env,"{TARGETDIR}/")
-    subprocess.run("cp ./linux/arch/x86/boot/bzImage .".split(), cwd= fuzz.expand(env,"{TARGETDIR}/"))
-    subprocess.run("cp ./linux/vmlinux .".split(), cwd= fuzz.expand(env,"{TARGETDIR}/"))
+
+    # we have multiple kernel variants: none kasan kmsan ubsan kcsan
+    os.makedirs(f"{TARGETDIR}/build", exist_ok=True)
+    os.makedirs(f"{TARGETDIR}/build_kmsan", exist_ok=True)
+    os.makedirs(f"{TARGETDIR}/build_kasan", exist_ok=True)
+    os.makedirs(f"{TARGETDIR}/build_ubsan", exist_ok=True)
+    os.makedirs(f"{TARGETDIR}/build_kcsan", exist_ok=True)
+
+
+
+    shutil.copyfile(f"{TARGETDIR}/.config",f"{TARGETDIR}/linux/.config")
+    subprocess.run("make O=../build olddefconfig".split(), cwd=f"{TARGETDIR}/linux")
+    subprocess.run("make -j32".split(), cwd=f"{TARGETDIR}/linux")
     #subprocess.run("wget https://raw.githubusercontent.com/google/syzkaller/master/tools/create-image.sh".split(),cwd="/tmp")
     #subprocess.run("chmod +x ./create-image.sh".split(),cwd="/tmp")
     #subprocess.run("sudo ./create-image.sh".split(),cwd="/tmp")
-    subprocess.run("cp /tmp/bullseye.id_rsa /tmp/bullseye.id_rsa.pub /tmp/bullseye.img .".split(), cwd= fuzz.expand(env,"{TARGETDIR}/"))
 
 
 
