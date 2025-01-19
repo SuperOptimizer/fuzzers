@@ -39,6 +39,8 @@ CONFIG_HARDLOCKUP_DETECTOR=y
 CONFIG_BOOTPARAM_HARDLOCKUP_PANIC=y
 CONFIG_DETECT_HUNG_TASK=y
 CONFIG_WQ_WATCHDOG=y
+CONFIG_DEBUG_KMEMLEAK=y
+CONFIG_KFENCE=y
 """
 
 variant_flags = {
@@ -106,7 +108,8 @@ def syzcaller():
         shutil.copytree(f"{TARGETDIR}/linux", f"{TARGETDIR}/linuxubsan")
 
     for variant in ["","msan","asan","kcsan","ubsan","tiny"]:
-        subprocess.run(f"make mrproper".split(), cwd=f"{TARGETDIR}/linux{variant}")
+        #TODO: when do we need to do a clean build? only when changing CONFIG_?
+        #subprocess.run(f"make mrproper".split(), cwd=f"{TARGETDIR}/linux{variant}")
 
         if variant == "":
             subprocess.run(f"make defconfig".split(), cwd=f"{TARGETDIR}/linux{variant}")
