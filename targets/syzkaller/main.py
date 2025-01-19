@@ -59,9 +59,9 @@ CONFIG_WQ_WATCHDOG=y
 CONFIG_DEFAULT_HUNG_TASK_TIMEOUT=140
 CONFIG_RCU_CPU_STALL_TIMEOUT=100
 
-CONFIG_LTO=y
-CONFIG_LTO_CLANG=y
-CONFIG_LTO_CLANG_FULL=y
+#CONFIG_LTO=y
+#CONFIG_LTO_CLANG_THIN=y
+#CONFIG_LTO_CLANG=y
 
 '''
 
@@ -70,7 +70,6 @@ CONFIG_KASAN=y
 CONFIG_KASAN_INLINE=y
 CONFIG_KASAN_GENERIC=y
 '''
-
 kcsan_flags = '''
 CONFIG_KCSAN=y
 '''
@@ -115,12 +114,15 @@ def syzcaller():
             flags += kcsan_flags
         if variant == "_ubsan":
             flags += ubsan_flags
+        # todo: figure out what needs to be done on a fresh checkout + full rebuild vs
+        # what needs to be done after a git pull
         subprocess.run(f"make mrproper".split(), cwd=f"{TARGETDIR}/linux{variant}")
-        subprocess.run(f"make LLVM=1 CC=ccache_clang allmodconfig".split(), cwd=f"{TARGETDIR}/linux{variant}")
-        subprocess.run(f"make LLVM=1 CC=ccache_clang kvm_guest.config".split(), cwd=f"{TARGETDIR}/linux{variant}")
+        shutil.copyfile("/home/forrest/syzkaller/dashboard/config/linux/upstream-apparmor-kasan.config",f"{TARGETDIR}/linux{variant}/.config")
+        #subprocess.run(f"make LLVM=1 CC=clang defconfig".split(), cwd=f"{TARGETDIR}/linux{variant}")
+        subprocess.run(f"make LLVM=1 CC=clang kvm_guest.config".split(), cwd=f"{TARGETDIR}/linux{variant}")
         write_config_flags(f"{TARGETDIR}/linux{variant}/.config", flags)
-        subprocess.run(f"make LLVM=1 CC=ccache_clang olddefconfig".split(), cwd=f"{TARGETDIR}/linux{variant}")
-        subprocess.run(f"make LLVM=1 CC=ccache_clang -j32".split(), cwd=f"{TARGETDIR}/linux{variant}")
+        subprocess.run(f"make LLVM=1 CC=clang olddefconfig".split(), cwd=f"{TARGETDIR}/linux{variant}")
+        subprocess.run(f"make LLVM=1 CC=clang -j32".split(), cwd=f"{TARGETDIR}/linux{variant}")
 
         subprocess.run("cp /tmp/bullseye.img /tmp/bullseye.id_rsa.pub /tmp/bullseye.id_rsa . ".split(),cwd=f"{TARGETDIR}/linux{variant}")
 

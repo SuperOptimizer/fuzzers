@@ -13,6 +13,6 @@ sudo make install
 
 #syzkaller stuff
 sudo apt update
-sudo apt install make gcc flex bison libncurses-dev libelf-dev libssl-dev build-essential binutils
+sudo apt install make gcc flex bison libncurses-dev libelf-dev libssl-dev build-essential binutils gawk
 sudo apt install debootstrap
 sudo apt install qemu-system-x86
