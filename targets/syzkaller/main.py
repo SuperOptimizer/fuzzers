@@ -98,16 +98,18 @@ def syzcaller():
     env = fuzz.get_env(TARGET, "nofuzz", False)
     REALTARGETDIR = fuzz.expand(env,"{TARGETDIR}")
     TARGETDIR = "/home/forrest/tmp/syzkaller"
+    subprocess.run("wget https://github.com/cmu-pasta/linux-kernel-enriched-corpus/releases/download/latest/corpus.db".split(),cwd=f"{SYZKALLER}/workdir")
     if not os.path.exists(TARGETDIR):
         os.makedirs(TARGETDIR)
         fuzz.git_checkout(env, GITURL, f"{TARGETDIR}/linux")
         shutil.copytree(f"{TARGETDIR}/linux", f"{TARGETDIR}/linuxkcsan")
         shutil.copytree(f"{TARGETDIR}/linux", f"{TARGETDIR}/linuxtiny")
+        shutil.copytree(f"{TARGETDIR}/linux", f"{TARGETDIR}/linuxhuge")
         shutil.copytree(f"{TARGETDIR}/linux", f"{TARGETDIR}/linuxmsan")
         shutil.copytree(f"{TARGETDIR}/linux", f"{TARGETDIR}/linuxasan")
         shutil.copytree(f"{TARGETDIR}/linux", f"{TARGETDIR}/linuxubsan")
 
-    for variant in ["","msan","asan","kcsan","ubsan","tiny"]:
+    for variant in ["","msan","asan","kcsan","ubsan","tiny","huge"]:
         #TODO: when do we need to do a clean build? only when changing CONFIG_?
         #subprocess.run(f"make mrproper".split(), cwd=f"{TARGETDIR}/linux{variant}")
 
@@ -115,6 +117,8 @@ def syzcaller():
             subprocess.run(f"make defconfig".split(), cwd=f"{TARGETDIR}/linux{variant}")
         elif variant == "tiny":
             subprocess.run(f"make tinyconfig".split(), cwd=f"{TARGETDIR}/linux{variant}")
+        elif variant == "huge":
+            subprocess.run(f"make allyesconfig".split(), cwd=f"{TARGETDIR}/linux{variant}")
         else:
             conf = {
                 "msan":f"/{SYZKALLER}/dashboard/config/linux/upstream-kmsan.config",
