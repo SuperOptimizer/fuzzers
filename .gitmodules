@@ -1,0 +1,3 @@
+[submodule "targets/ggml"]
+	path = targets/ggml
+	url = https://github.com/SuperOptimizer/ggml.git
