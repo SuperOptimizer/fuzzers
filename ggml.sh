@@ -1,6 +1,5 @@
 #!/bin/bash
-git clone https://github.com/ggml-org/ggml.git
-cd ggml
+cd targets/ggml
 mkdir build
 cd build
 cmake .. -DCMAKE_C_COMPILER=afl-clang-lto -DCMAKE_CXX_COMPILER=afl-clang-lto++ -DBUILD_SHARED_LIBS=OFF -DGGML_BACKEND_DL=OFF -DGGML_STATIC=ON -DGGML_NATIVE=ON -DGGML_LTO=ON -DGGML_SANITIZE_ADDRESS=ON -DGGML_SANITIZE_UNDEFINED=ON

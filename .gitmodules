@@ -1,3 +1,6 @@
 [submodule "targets/ggml"]
 	path = targets/ggml
 	url = https://github.com/SuperOptimizer/ggml.git
+[submodule "targets/llama.cpp"]
+	path = targets/llama.cpp
+	url = https://github.com/SuperOptimizer/llama.cpp.git
