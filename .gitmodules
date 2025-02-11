@@ -4,3 +4,6 @@
 [submodule "targets/llama.cpp"]
 	path = targets/llama.cpp
 	url = https://github.com/SuperOptimizer/llama.cpp.git
+[submodule "targets/llamafile"]
+	path = targets/llamafile
+	url = https://github.com/SuperOptimizer/llamafile.git
