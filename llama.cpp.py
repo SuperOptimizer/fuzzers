@@ -1,6 +1,3 @@
-The error indicates the shell expansion `$(nproc)` isn't working in the subprocess call. Let's fix it:
-
-```python
 #!/usr/bin/env python3
 import os
 import subprocess
