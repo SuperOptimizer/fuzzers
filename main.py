@@ -24,13 +24,9 @@ def build_variant(path: str, variant: str, extra_flags: dict):
     build_path = Path(path) / build_dir
     build_path.parent.mkdir(exist_ok=True)
 
-    if build_path.exists():
-        subprocess.run(["rm", "-rf", str(build_path)], check=True)
-    build_path.mkdir()
-
     sanitize_flags = {
         "nosan": "",
-        "asan": "-fsanitize=address -fsanitize-address-use-after-return=always -fsanitize-address-use-after-scope",
+        "asan": "-fsanitize=address,undefined -fsanitize-address-use-after-return=always -fsanitize-address-use-after-scope",
         "ubsan": "-fsanitize=undefined",
         "msan": "-fsanitize=memory",
         "tsan": "-fsanitize=thread",
@@ -42,14 +38,17 @@ def build_variant(path: str, variant: str, extra_flags: dict):
 
     sanitize_string = sanitize_flags[variant]
 
+    ccflags = f"-O3 -march=native  -fvisibility=hidden -g3 -flto=full -fno-sanitize-recover=all -fno-omit-frame-pointer {sanitize_string}  -ggdb  -rdynamic -Weverything -Wno-error -Wno-unsafe-buffer-usage -ffunction-sections -fdata-sections -Wl,--gc-sections -Wno-unused-function -Wno-c++98-compat-pedantic -Wno-unused-macros -Wno-padded"
+    linkflags = f"-fuse-ld=ld.lld -flto=full -fno-sanitize-recover=all -fno-omit-frame-pointer {sanitize_string} -g3 -ggdb  -rdynamic -ffunction-sections -fdata-sections -Wl,--gc-sections "
+
     cmake_flags = {
-        "CMAKE_C_COMPILER":f"afl-clang-lto",
-        "CMAKE_CXX_COMPILER":f"afl-clang-lto++",
-        "BUILD_SHARED_LIBS":f"OFF",
-        "CMAKE_EXE_LINKER_FLAGS":f"-fuse-ld=ld.lld -flto=full -fno-sanitize-recover=all -fno-omit-frame-pointer {sanitize_string}",
-        "CMAKE_SHARED_LINKER_FLAGS":f"-fuse-ld=ld.lld -flto=full -fno-sanitize-recover=all -fno-omit-frame-pointer {sanitize_string}",
-        "CMAKE_C_FLAGS":f"-O3 -march=native -funroll-loops -fvisibility=hidden -g3 -flto=full -fno-sanitize-recover=all -fno-omit-frame-pointer {sanitize_string}",
-        "CMAKE_CXX_FLAGS":f"-O3 -march=native -funroll-loops -fvisibility=hidden -g3 -flto=full -fno-sanitize-recover=all -fno-omit-frame-pointer {sanitize_string}",
+        "CMAKE_C_COMPILER": f"afl-clang-lto",
+        "CMAKE_CXX_COMPILER": f"afl-clang-lto++",
+        "BUILD_SHARED_LIBS": f"OFF",
+        "CMAKE_EXE_LINKER_FLAGS": linkflags,
+        "CMAKE_SHARED_LINKER_FLAGS": linkflags,
+        "CMAKE_C_FLAGS": ccflags,
+        "CMAKE_CXX_FLAGS": ccflags,
     }
 
     env_vars = {
@@ -64,25 +63,28 @@ def build_variant(path: str, variant: str, extra_flags: dict):
         "redqueen": {"AFL_LLVM_CMPLOG": "1"},
     }[variant]
 
-    args = ["cmake",".."]
+    args = ["cmake", "..", "-G", "Ninja"]
 
-    for k,v in cmake_flags.items():
+    for k, v in cmake_flags.items():
         args.append(f"-D{k}={v}")
 
-    for k,v in extra_flags.items():
+    for k, v in extra_flags.items():
         if k in cmake_flags:
 
             args.append(f"-D{k}={cmake_flags.get(k, "") + v}")
         else:
             args.append(f"-D{k}={v}")
 
-
     env = os.environ.copy()
     env.update(env_vars)
 
-    subprocess.run(args, env=env, check=True, cwd=build_path)
-    cpu_count = str(os.cpu_count())
-    subprocess.run(["make", f"-j{cpu_count}"], env=env, check=True, cwd=build_path)
+    if "incremental" not in sys.argv:
+        if build_path.exists():
+            subprocess.run(["rm", "-rf", str(build_path)], check=True)
+        build_path.mkdir()
+        subprocess.run(args, env=env, check=True, cwd=build_path)
+
+    subprocess.run(["ninja"], env=env, check=True, cwd=build_path)
 
 
 
@@ -117,13 +119,14 @@ def llama_cpp():
         "LLAMA_STATIC":"ON",
         "LLAMA_NATIVE":"ON",
         "LLAMA_LTO":"OFF",
-        "LLAMA_BUILD_EXAMPLES":"OFF",
+        "LLAMA_BUILD_EXAMPLES":"ON",
         "LLAMA_BUILD_TESTS":"ON"
     }
     build_target("targets/llama.cpp", VARIANTS, extra_flags)
 
-
+import sys
 
 if __name__ == "__main__":
+    print(sys.argv)
     ggml()
     llama_cpp()
