@@ -113,6 +113,21 @@ def ggml():
         "GGML_LTO":"OFF",
         "GGML_BUILD_EXAMPLES":"OFF",
         "GGML_BUILD_TESTS":"ON",
+        "GGML_CPU_AARCH64":"OFF",
+        "GGML_AVX":"OFF",
+        "GGML_AVX2":"OFF",
+        "GGML_FMA":"OFF",
+        "GGML_F16C":"OFF",
+        "GGML_LASX":"OFF",
+        "GGML_LSX":"OFF",
+        "GGML_RVV":"OFF",
+        "GGML_CPU_ALL_VARIANTS":"OFF",
+        "GGML_ACCELERATE":"OFF",
+        "GGML_BLAS":"OFF",
+        "GGML_LLAMAFILE":"OFF",
+        "GGML_OPENMP":"OFF",
+        "GGML_OPENCL_EMBED_KERNELS":"OFF",
+
     }
     build_target("targets/ggml", VARIANTS, extra_flags)
 
@@ -130,7 +145,21 @@ def llama_cpp():
         "LLAMA_NATIVE":"ON",
         "LLAMA_LTO":"OFF",
         "LLAMA_BUILD_EXAMPLES":"ON",
-        "LLAMA_BUILD_TESTS":"ON"
+        "LLAMA_BUILD_TESTS":"ON",
+        "GGML_CPU_AARCH64":"OFF",
+        "GGML_AVX":"OFF",
+        "GGML_AVX2":"OFF",
+        "GGML_FMA":"OFF",
+        "GGML_F16C":"OFF",
+        "GGML_LASX":"OFF",
+        "GGML_LSX":"OFF",
+        "GGML_RVV":"OFF",
+        "GGML_CPU_ALL_VARIANTS":"OFF",
+        "GGML_ACCELERATE":"OFF",
+        "GGML_BLAS":"OFF",
+        "GGML_LLAMAFILE":"OFF",
+        "GGML_OPENMP":"OFF",
+        "GGML_OPENCL_EMBED_KERNELS":"OFF",
     }
     build_target("targets/llama.cpp", VARIANTS, extra_flags)
 
@@ -143,16 +172,18 @@ def gen_commands(target, corpus, out, executable):
     ]
 
     for variant in VARIANTS:
+        env_args = ""
+        afl_args = ""
+
         if "sand" in variant:
+            env_args += " AFL_SAN_ABSTRACTION=unique_trace "
             executable_path = f"./targets/{target}/build_nosan/{executable}"
             sand_str = f" -w ./targets/{target}/build_sand_asan/{executable} -w ./targets/{target}/build_sand_tsan/{executable} -w ./targets/{target}/build_sand_asan/{executable} -w ./targets/{target}/build_sand_cfisan/{executable} "
         else:
             executable_path = f"./targets/{target}/build_{variant}/{executable}"
             sand_str = ""
 
-        redqueen_str = f"-c ./targets/{target}/build_redqueen/{executable}" if "redqueen" == variant else ""
-        afl_args = ""
-        env_args = ""
+        redqueen_str = f"-c ./targets/{target}/build_redqueen/{executable}" if "redqueen" in variant else ""
         if random.randint(1,10) == 1:
             afl_args += " -L 0 "
         if random.randint(1,10) == 1:
@@ -185,12 +216,12 @@ def gen_commands(target, corpus, out, executable):
         if random.randint(1,2) == 1:
             env_args += "AFL_EXPAND_HAVOC_NOW=1 "
 
-        if variant in ['nosan','redqueen','laf']:
+        if 'nosan' in variant or 'redqueen' in variant or 'laf' in variant:
             mem_limit_str = f"-m {random.randint(64,1024)}"
         else:
             mem_limit_str = ""
 
-        if variant == "redqueen":
+        if "redqueen" in variant:
             if random.randint(1,2):
                 afl_args += " -l 2 "
             elif random.randint(1,2):
