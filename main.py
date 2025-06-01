@@ -11,6 +11,7 @@ VARIANTS = {
     "asan",
     "msan",
     "tsan",
+    "ubsan",
     "cfisan",
     "laf",
     "redqueen",
@@ -33,6 +34,7 @@ def build_variant(path: str, variant: str, extra_flags: dict):
         "msan": "-fsanitize=memory",
         "tsan": "-fsanitize=thread",
         "cfisan": "-fsanitize=cfi",
+        "ubsan": "-fsanitize=undefined", 
         "laf": "",
         "redqueen": "",
         "sand_asan": " -fsanitize=address,undefined -fsanitize-address-use-after-return=always -fsanitize-address-use-after-scope -fsanitize=leak ",
@@ -43,8 +45,8 @@ def build_variant(path: str, variant: str, extra_flags: dict):
 
     sanitize_string = sanitize_flags[variant]
 
-    ccflags = f"-O3 -march=native  -fvisibility=hidden -g3 -flto=full -fno-sanitize-recover=all -fno-omit-frame-pointer {sanitize_string}  -ggdb  -rdynamic -Weverything -Wno-error -Wno-unsafe-buffer-usage -ffunction-sections -fdata-sections -Wl,--gc-sections -Wno-unused-function -Wno-c++98-compat-pedantic -Wno-unused-macros -Wno-padded"
-    linkflags = f"-fuse-ld=ld.lld -flto=full -fno-sanitize-recover=all -fno-omit-frame-pointer {sanitize_string} -g3 -ggdb  -rdynamic -ffunction-sections -fdata-sections -Wl,--gc-sections "
+    ccflags = f"-O3 -march=native  -fvisibility=hidden -g3 -flto=full -fno-sanitize-recover=all -fno-omit-frame-pointer {sanitize_string}  -ggdb  -rdynamic -Weverything -Wno-error -Wno-unsafe-buffer-usage -ffunction-sections -fdata-sections -Wl,--gc-sections -Wno-unused-function -Wno-c++98-compat-pedantic -Wno-unused-macros -Wno-padded -w  -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind"
+    linkflags = f"-fuse-ld=ld.lld -flto=full -fno-sanitize-recover=all -fno-omit-frame-pointer {sanitize_string} -g3 -ggdb  -rdynamic -ffunction-sections -fdata-sections -Wl,--gc-sections -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind -fvisibility=hidden "
 
     cmake_flags = {
         "CMAKE_C_COMPILER": f"afl-clang-lto",
@@ -62,6 +64,7 @@ def build_variant(path: str, variant: str, extra_flags: dict):
         "msan": {"AFL_USE_MSAN": "1"},
         "tsan": {"AFL_USE_TSAN": "1"},
         "cfisan": {"AFL_USE_CFISAN": "1"},
+        "ubsan": {"AFL_USE_UBSAN":"1"},
         "laf": {"AFL_LLVM_LAF_ALL": "1"},
         "redqueen": {"AFL_LLVM_CMPLOG": "1"},
 
@@ -102,7 +105,9 @@ def build_variant(path: str, variant: str, extra_flags: dict):
 def build_target(path, variants, flags):
     build_configs = [(path, v, flags) for v in variants]
 
-    with Pool() as pool:
+    #for config in build_configs:
+    #  build_variant(*config)
+    with Pool(4) as pool:
         pool.starmap(build_variant, build_configs)
 
 def ggml():
