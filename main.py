@@ -60,10 +60,10 @@ def build_variant(path: str, variant: str, extra_flags: dict):
         ccflags = f"-Og  -march=native -gdwarf-4  -g3       -w  -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind -fvisibility-inlines-hidden -fvisibility=hidden -fno-stack-protector "
         linkflags = f"-fuse-ld=lld  -gdwarf-4  -g3    -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind  -fvisibility-inlines-hidden -fvisibility=hidden  -fno-stack-protector "
     else:
-        cc = "afl-clang-fast"
-        cxx = "afl-clang-fast++"
-        ccflags = f"-Og  -march=native -gdwarf-4  -g3  -fno-sanitize-recover=all  {sanitize_string}     -w  -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind -fvisibility-inlines-hidden -fvisibility=hidden  "
-        linkflags = f"-fuse-ld=lld  -gdwarf-4 -fno-sanitize-recover=all  {sanitize_string} -g3    -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind  -fvisibility-inlines-hidden -fvisibility=hidden  "
+        cc = "afl-clang-lto"
+        cxx = "afl-clang-lto++"
+        ccflags = f"-Og  -march=native -gdwarf-4 -flto=full -g3  -fno-sanitize-recover=all  {sanitize_string}     -w  -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind -fvisibility-inlines-hidden -fvisibility=hidden  "
+        linkflags = f"-fuse-ld=lld  -gdwarf-4 -flto=full  -fno-sanitize-recover=all  {sanitize_string} -g3    -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind  -fvisibility-inlines-hidden -fvisibility=hidden  "
 
 
     cmake_flags = {
