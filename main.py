@@ -57,13 +57,13 @@ def build_variant(path: str, variant: str, extra_flags: dict):
     if "nofuzz" in sys.argv:
         cc = "clang"
         cxx = "clang++"
-        ccflags = f"-Og  -march=native -gdwarf-4  -g3       -w  -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind -fvisibility-inlines-hidden -fvisibility=hidden -fno-stack-protector "
-        linkflags = f"-fuse-ld=lld  -gdwarf-4  -g3    -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind  -fvisibility-inlines-hidden -fvisibility=hidden  -fno-stack-protector "
+        ccflags = f"-Og  -march=native -gdwarf-4  -g3       -w  -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind -fvisibility-inlines-hidden -fvisibility=hidden -fno-stack-protector -fno-omit-frame-pointer "
+        linkflags = f"-fuse-ld=lld  -gdwarf-4  -g3    -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind  -fvisibility-inlines-hidden -fvisibility=hidden  -fno-stack-protector -fno-omit-frame-pointer "
     else:
         cc = "afl-clang-lto"
         cxx = "afl-clang-lto++"
-        ccflags = f"-O3  -march=native -gdwarf-4 -flto=full -g3  -fno-sanitize-recover=all  {sanitize_string}     -w  -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind -fvisibility-inlines-hidden -fvisibility=hidden  "
-        linkflags = f"-fuse-ld=lld  -gdwarf-4 -flto=full  -fno-sanitize-recover=all  {sanitize_string} -g3    -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind  -fvisibility-inlines-hidden -fvisibility=hidden  "
+        ccflags = f"-O3  -march=native -gdwarf-4 -flto=full -g3  -fno-sanitize-recover=all  {sanitize_string}     -w  -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind -fvisibility-inlines-hidden -fvisibility=hidden -fno-omit-frame-pointer  "
+        linkflags = f"-fuse-ld=lld  -gdwarf-4 -flto=full  -fno-sanitize-recover=all  {sanitize_string} -g3    -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind  -fvisibility-inlines-hidden -fvisibility=hidden -fno-omit-frame-pointer  "
 
 
     cmake_flags = {
