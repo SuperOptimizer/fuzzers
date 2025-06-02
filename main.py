@@ -62,7 +62,7 @@ def build_variant(path: str, variant: str, extra_flags: dict):
     else:
         cc = "afl-clang-lto"
         cxx = "afl-clang-lto++"
-        ccflags = f"-Og  -march=native -gdwarf-4 -flto=full -g3  -fno-sanitize-recover=all  {sanitize_string}     -w  -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind -fvisibility-inlines-hidden -fvisibility=hidden  "
+        ccflags = f"-O3  -march=native -gdwarf-4 -flto=full -g3  -fno-sanitize-recover=all  {sanitize_string}     -w  -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind -fvisibility-inlines-hidden -fvisibility=hidden  "
         linkflags = f"-fuse-ld=lld  -gdwarf-4 -flto=full  -fno-sanitize-recover=all  {sanitize_string} -g3    -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind  -fvisibility-inlines-hidden -fvisibility=hidden  "
 
 
@@ -126,7 +126,7 @@ def build_target(path, variants, flags):
 
     #for config in build_configs:
     #  build_variant(*config)
-    with Pool(2 if  "incremental" not in sys.argv else 4) as pool:
+    with Pool() as pool:
         pool.starmap(build_variant, build_configs)
 
 def ggml():
