@@ -208,50 +208,50 @@ def gen_commands(target, corpus, out, executable):
             sand_str = ""
 
         redqueen_str = f"-c ./targets/{target}/build_redqueen/{executable}" if "redqueen" in variant else ""
-        if random.randint(1,10) == 1:
-            afl_args += " -L 0 "
-        if random.randint(1,10) == 1:
-            afl_args += " -Z "
-        if random.randint(1,3) == 1:
-            afl_args += " -P explore"
-        elif random.randint(1,2) == 1:
-            afl_args +=  " -P exploit "
+        #if random.randint(1,10) == 1:
+        #    afl_args += " -L 0 "
+        #if random.randint(1,10) == 1:
+        #    afl_args += " -Z "
+        #if random.randint(1,3) == 1:
+        #    afl_args += " -P explore"
+        #elif random.randint(1,2) == 1:
+        #    afl_args +=  " -P exploit "
 
 
-        if random.randint(1, 8) == 1:
-            afl_args += " -p explore "
-        elif random.randint(1, 7) == 1:
-            afl_args += " -p fast "
-        elif random.randint(1, 6) == 1:
-            afl_args += " -p exploit "
-        elif random.randint(1, 5) == 1:
-            afl_args += " -p seek "
-        elif random.randint(1, 4) == 1:
-            afl_args += " -p rare "
-        elif random.randint(1, 3) == 1:
-            afl_args += " -p mmopt "
-        elif random.randint(1, 2) == 1:
-            afl_args += " -p coe "
+        #if random.randint(1, 8) == 1:
+        #    afl_args += " -p explore "
+        #elif random.randint(1, 7) == 1:
+        #    afl_args += " -p fast "
+        #elif random.randint(1, 6) == 1:
+        #    afl_args += " -p exploit "
+        #elif random.randint(1, 5) == 1:
+        #    afl_args += " -p seek "
+        #elif random.randint(1, 4) == 1:
+        #    afl_args += " -p rare "
+        #elif random.randint(1, 3) == 1:
+        #    afl_args += " -p mmopt "
+        #elif random.randint(1, 2) == 1:
+        #    afl_args += " -p coe "
 
-        if random.randint(1,2) == 1:
-            env_args += "AFL_DISABLE_TRIM=1 "
-        if random.randint(1,2) == 1:
-            env_args += "AFL_KEEP_TIMEOUTS=1 "
-        if random.randint(1,2) == 1:
-            env_args += "AFL_EXPAND_HAVOC_NOW=1 "
+        #if random.randint(1,2) == 1:
+        #    env_args += "AFL_DISABLE_TRIM=1 "
+        #if random.randint(1,2) == 1:
+        #    env_args += "AFL_KEEP_TIMEOUTS=1 "
+        #if random.randint(1,2) == 1:
+        #    env_args += "AFL_EXPAND_HAVOC_NOW=1 "
 
-        if 'nosan' in variant or 'redqueen' in variant or 'laf' in variant:
-            mem_limit_str = f"-m {random.randint(64,1024)}"
-        else:
-            mem_limit_str = ""
+        #if 'nosan' in variant or 'redqueen' in variant or 'laf' in variant:
+        #    mem_limit_str = f"-m {random.randint(64,1024)}"
+        #else:
+        #    mem_limit_str = ""
 
-        if "redqueen" in variant:
-            if random.randint(1,2):
-                afl_args += " -l 2 "
-            elif random.randint(1,2):
-                afl_args += " -l 2AT "
-            elif random.randint(1,2):
-                afl_args += " -l 3 "
+        #if "redqueen" in variant:
+        #    if random.randint(1,2):
+        #        afl_args += " -l 2 "
+        #    elif random.randint(1,2):
+        #        afl_args += " -l 2AT "
+        #    elif random.randint(1,2):
+        #        afl_args += " -l 3 "
 
         cmds.append(fmt_str.format(env_args=env_args, timeout=random.randint(5,500), mem_limit_str=mem_limit_str, M_or_S="-S", variant=variant, redqueen_str=redqueen_str, sand_str=sand_str, afl_args=afl_args,  corpus=corpus, out=out, executable=executable_path))
 
@@ -283,6 +283,6 @@ if __name__ == "__main__":
     print(sys.argv)
     if "ggml" in sys.argv:
         ggml()
-        print(gen_commands("ggml","corpus/gguf","out","bin/test-fuzz"))
+        print(gen_commands("ggml","corpus/gguf","out","bin/test-fuzz-mnist"))
     if "llama.cpp" in sys.argv:
         llama_cpp()
