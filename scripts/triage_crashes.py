@@ -11,9 +11,11 @@ def triage_afl_crashes(input_dir, executable):
       try:
         ret =subprocess.run([executable, f"{input_dir}/{path}"],stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE,timeout=1)
         if ret.returncode!= 0:
+          print(f"triaging {input_dir}/{path}")
           print(ret.stdout.decode('ascii'))
           print(ret.stderr.decode('ascii'))
       except:
+
         pass #subprocess.run raises if we get a timeout. ignore for now
 
 def main():

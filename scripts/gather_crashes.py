@@ -8,6 +8,8 @@ import string
 def process_afl_crashes(input_dir, output_dir):
    os.makedirs(output_dir, exist_ok=True)
    for root, _, files in os.walk(input_dir):
+       if 'crashes' not in root:
+           continue
        for filename in files:
            full_path = os.path.join(root, filename)
            if  filename.startswith('id:'):

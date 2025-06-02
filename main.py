@@ -12,13 +12,14 @@ VARIANTS = {
     "msan",
     "tsan",
     "ubsan",
+    "leak",
     "cfisan",
     "laf",
     "redqueen",
-    "sand_asan",
-    "sand_msan",
-    "sand_tsan",
-    "sand_cfisan"
+    #"sand_asan",
+    #"sand_msan",
+    #"sand_tsan",
+    #"sand_cfisan"
 }
 
 def build_variant(path: str, variant: str, extra_flags: dict):
@@ -30,23 +31,24 @@ def build_variant(path: str, variant: str, extra_flags: dict):
 
     sanitize_flags = {
         "nosan": "",
-        "asan": "-fsanitize=address,undefined -fsanitize-address-use-after-return=always -fsanitize-address-use-after-scope -fsanitize=leak ",
+        "asan": "-fsanitize=address -fsanitize-address-use-after-return=always -fsanitize-address-use-after-scope  ",
         "msan": "-fsanitize=memory",
         "tsan": "-fsanitize=thread",
         "cfisan": "-fsanitize=cfi",
-        "ubsan": "-fsanitize=undefined", 
+        "ubsan": "-fsanitize=undefined -fno-sanitize-recover=undefined",
+        "leak": "-fsanitize=leak",
         "laf": "",
         "redqueen": "",
-        "sand_asan": " -fsanitize=address,undefined -fsanitize-address-use-after-return=always -fsanitize-address-use-after-scope -fsanitize=leak ",
-        "sand_msan": "-fsanitize=memory",
-        "sand_tsan": "-fsanitize=thread",
-        "sand_cfisan": "-fsanitize=cfi",
+        #"sand_asan": " -fsanitize=address,undefined -fsanitize-address-use-after-return=always -fsanitize-address-use-after-scope -fsanitize=leak ",
+        #"sand_msan": "-fsanitize=memory",
+        #"sand_tsan": "-fsanitize=thread",
+        #"sand_cfisan": "-fsanitize=cfi",
     }
 
     sanitize_string = sanitize_flags[variant]
 
-    ccflags = f"-O3 -march=native  -fvisibility=hidden -g3 -flto=full -fno-sanitize-recover=all -fno-omit-frame-pointer {sanitize_string}  -ggdb  -rdynamic -Weverything -Wno-error -Wno-unsafe-buffer-usage -ffunction-sections -fdata-sections -Wl,--gc-sections -Wno-unused-function -Wno-c++98-compat-pedantic -Wno-unused-macros -Wno-padded -w  -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind"
-    linkflags = f"-fuse-ld=ld.lld -flto=full -fno-sanitize-recover=all -fno-omit-frame-pointer {sanitize_string} -g3 -ggdb  -rdynamic -ffunction-sections -fdata-sections -Wl,--gc-sections -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind -fvisibility=hidden "
+    ccflags = f"-Ofast -flto=full -march=native -gdwarf-4  -g3  -fno-sanitize-recover=all  {sanitize_string}     -w  -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind -fvisibility-inlines-hidden -fvisibility=hidden -fno-stack-protector "
+    linkflags = f"-fuse-ld=lld -flto=full -gdwarf-4 -fno-sanitize-recover=all  {sanitize_string} -g3    -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind  -fvisibility-inlines-hidden -fvisibility=hidden -Wl,--icf=all -fno-stack-protector "
 
     cmake_flags = {
         "CMAKE_C_COMPILER": f"afl-clang-lto",
@@ -60,18 +62,19 @@ def build_variant(path: str, variant: str, extra_flags: dict):
 
     env_vars = {
         "nosan": {},
-        "asan": {"AFL_USE_ASAN": "1", "AFL_USE_UBSAN": "1","AFL_USE_LSAN": "1"},
+        "asan": {"AFL_USE_ASAN": "1"},
         "msan": {"AFL_USE_MSAN": "1"},
         "tsan": {"AFL_USE_TSAN": "1"},
         "cfisan": {"AFL_USE_CFISAN": "1"},
-        "ubsan": {"AFL_USE_UBSAN":"1"},
+        "ubsan": {"AFL_USE_UBSAN":"1", "AFL_UBSAN_VERBOSE":"1"},
+        "leak": {"AFL_USE_LEAK":"1"},
         "laf": {"AFL_LLVM_LAF_ALL": "1"},
         "redqueen": {"AFL_LLVM_CMPLOG": "1"},
 
-        "sand_asan": {"AFL_USE_ASAN": "1", "AFL_USE_UBSAN": "1","AFL_SAN_NO_INST":"1","AFL_USE_LSAN": "1"},
-        "sand_msan": {"AFL_USE_MSAN": "1","AFL_SAN_NO_INST":"1"},
-        "sand_tsan": {"AFL_USE_TSAN": "1","AFL_SAN_NO_INST":"1"},
-        "sand_cfisan": {"AFL_USE_CFISAN": "1","AFL_SAN_NO_INST":"1"},
+        #"sand_asan": {"AFL_USE_ASAN": "1", "AFL_USE_UBSAN": "1","AFL_SAN_NO_INST":"1","AFL_USE_LSAN": "1"},
+        #"sand_msan": {"AFL_USE_MSAN": "1","AFL_SAN_NO_INST":"1"},
+        #"sand_tsan": {"AFL_USE_TSAN": "1","AFL_SAN_NO_INST":"1"},
+        #"sand_cfisan": {"AFL_USE_CFISAN": "1","AFL_SAN_NO_INST":"1"},
 
 
     }[variant]
@@ -107,7 +110,7 @@ def build_target(path, variants, flags):
 
     #for config in build_configs:
     #  build_variant(*config)
-    with Pool(4) as pool:
+    with Pool(2) as pool:
         pool.starmap(build_variant, build_configs)
 
 def ggml():
