@@ -5,22 +5,26 @@ from pathlib import Path
 from multiprocessing import Pool
 from functools import partial
 import random
+import sys
 
-VARIANTS = {
-    "nosan",
-    "asan",
-    "msan",
-    "tsan",
-    "ubsan",
-    "leak",
-    "cfisan",
-    "laf",
-    "redqueen",
-    #"sand_asan",
-    #"sand_msan",
-    #"sand_tsan",
-    #"sand_cfisan"
-}
+if "nofuzz" in sys.argv:
+    VARIANTS = {"nosan"}
+else:
+    VARIANTS = {
+        "nosan",
+        "asan",
+        "msan",
+        "tsan",
+        "ubsan",
+        "leak",
+        "cfisan",
+        "laf",
+        "redqueen",
+        #"sand_asan",
+        #"sand_msan",
+        #"sand_tsan",
+        #"sand_cfisan"
+    }
 
 def build_variant(path: str, variant: str, extra_flags: dict):
     assert variant in VARIANTS
@@ -47,12 +51,24 @@ def build_variant(path: str, variant: str, extra_flags: dict):
 
     sanitize_string = sanitize_flags[variant]
 
-    ccflags = f"-Ofast -flto=full -march=native -gdwarf-4  -g3  -fno-sanitize-recover=all  {sanitize_string}     -w  -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind -fvisibility-inlines-hidden -fvisibility=hidden -fno-stack-protector "
-    linkflags = f"-fuse-ld=lld -flto=full -gdwarf-4 -fno-sanitize-recover=all  {sanitize_string} -g3    -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind  -fvisibility-inlines-hidden -fvisibility=hidden -Wl,--icf=all -fno-stack-protector "
+
+
+
+    if "nofuzz" in sys.argv:
+        cc = "clang"
+        cxx = "clang++"
+        ccflags = f"-Og  -march=native -gdwarf-4  -g3       -w  -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind -fvisibility-inlines-hidden -fvisibility=hidden -fno-stack-protector "
+        linkflags = f"-fuse-ld=lld  -gdwarf-4  -g3    -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind  -fvisibility-inlines-hidden -fvisibility=hidden -Wl,--icf=all -fno-stack-protector "
+    else:
+        cc = "afl-clang-lto"
+        cxx = "afl-clang-lto++"
+        ccflags = f"-Ofast -flto=full -march=native -gdwarf-4  -g3  -fno-sanitize-recover=all  {sanitize_string}     -w  -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind -fvisibility-inlines-hidden -fvisibility=hidden -fno-stack-protector "
+        linkflags = f"-fuse-ld=lld -flto=full -gdwarf-4 -fno-sanitize-recover=all  {sanitize_string} -g3    -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind  -fvisibility-inlines-hidden -fvisibility=hidden -Wl,--icf=all -fno-stack-protector "
+
 
     cmake_flags = {
-        "CMAKE_C_COMPILER": f"afl-clang-lto",
-        "CMAKE_CXX_COMPILER": f"afl-clang-lto++",
+        "CMAKE_C_COMPILER": cc,
+        "CMAKE_CXX_COMPILER": cxx,
         "BUILD_SHARED_LIBS": f"OFF",
         "CMAKE_EXE_LINKER_FLAGS": linkflags,
         "CMAKE_SHARED_LINKER_FLAGS": linkflags,
@@ -100,7 +116,7 @@ def build_variant(path: str, variant: str, extra_flags: dict):
         build_path.mkdir()
         subprocess.run(args, env=env, check=True, cwd=build_path)
 
-    subprocess.run(["ninja"], env=env, check=True, cwd=build_path)
+    subprocess.run(["ninja","-k","0"], env=env, check=True, cwd=build_path)
 
 
 
@@ -110,7 +126,7 @@ def build_target(path, variants, flags):
 
     #for config in build_configs:
     #  build_variant(*config)
-    with Pool(2) as pool:
+    with Pool(2 if  "incremental" not in sys.argv else 4) as pool:
         pool.starmap(build_variant, build_configs)
 
 def ggml():
@@ -119,7 +135,7 @@ def ggml():
         "GGML_STATIC":"ON",
         "GGML_NATIVE":"ON",
         "GGML_LTO":"OFF",
-        "GGML_BUILD_EXAMPLES":"OFF",
+        "GGML_BUILD_EXAMPLES":"ON" if "nofuzz" in sys.argv else "OFF",
         "GGML_BUILD_TESTS":"ON",
         "GGML_CPU_AARCH64":"OFF",
         "GGML_AVX":"OFF",
@@ -241,7 +257,6 @@ def gen_commands(target, corpus, out, executable):
 
     return "\n".join(cmds)
 
-import sys
 
 '''
 export TMPDIR=/tmp
