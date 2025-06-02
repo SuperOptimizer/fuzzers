@@ -253,7 +253,7 @@ def gen_commands(target, corpus, out, executable):
         #    elif random.randint(1,2):
         #        afl_args += " -l 3 "
 
-        cmds.append(fmt_str.format(env_args=env_args, timeout=random.randint(5,500), mem_limit_str=mem_limit_str, M_or_S="-S", variant=variant, redqueen_str=redqueen_str, sand_str=sand_str, afl_args=afl_args,  corpus=corpus, out=out, executable=executable_path))
+        cmds.append(fmt_str.format(env_args=env_args, timeout=random.randint(5,500), mem_limit_str="", M_or_S="-S", variant=variant, redqueen_str=redqueen_str, sand_str=sand_str, afl_args=afl_args,  corpus=corpus, out=out, executable=executable_path))
 
     return "\n".join(cmds)
 
