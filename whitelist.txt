@@ -1,10 +1,6 @@
-gguf.cpp
 test-fuzz.cpp
-ggml.c
-ggml-alloc.c
-ggml-backend.cpp
-
+llama-model-loader.cpp
+llama.cpp
 
 main
 LLVMFuzzerTestOneInput
-gguf_init_from_file_impl

@@ -7,3 +7,9 @@
 [submodule "targets/llamafile"]
 	path = targets/llamafile
 	url = https://github.com/SuperOptimizer/llamafile.git
+[submodule "targets/whisper.cpp"]
+	path = targets/whisper.cpp
+	url = https://github.com/SuperOptimizer/whisper.cpp.git
+[submodule "targets/libssh"]
+	path = targets/libssh
+	url = https://git.libssh.org/projects/libssh.git/
