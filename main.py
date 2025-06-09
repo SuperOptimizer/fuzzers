@@ -66,8 +66,8 @@ def build_variant(path: str, variant: str, extra_flags: dict):
     sanitize_string = sanitize_flags[variant]
 
     #-stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind
-    ccflags =   f" -w -g3 -march=native  -fno-omit-frame-pointer "
-    linkflags = f"    -g3 -fuse-ld=lld  -fno-omit-frame-pointer -Wl,--threads=32 "
+    ccflags =   f" -m32  -w -g3 -march=native  -fno-omit-frame-pointer "
+    linkflags = f" -m32   -g3 -fuse-ld=lld  -fno-omit-frame-pointer -Wl,--threads=32 "
 
     if "nosan" not in sys.argv or "nosan" in variant:
         ccflags +=   f" -fno-sanitize-recover=all {sanitize_string} "
@@ -242,7 +242,7 @@ def gen_commands(target, corpus, out, executable):
 
     # Create the tmux session with the first (main) command
     main_cmd = fmt_str.format(
-        env_args="AFL_NO_STARTUP_CALIBRATION=1 ", timeout=100, M_or_S="-M", mem_limit_str="",
+        env_args="", timeout=100, M_or_S="-M", mem_limit_str="",
         variant="main", redqueen_str="", sand_str="", afl_args="",
         corpus=corpus, out=out,
         executable=f"./targets/{target}/build_nosan/{executable}"
@@ -256,7 +256,7 @@ def gen_commands(target, corpus, out, executable):
     for variant in VARIANTS:
         num_procs = 1
         for i in range(num_procs):
-            env_args = "AFL_NO_STARTUP_CALIBRATION=1 "
+            env_args = " "
             afl_args = ""
             sand_str = ""
             redqueen_str = ""

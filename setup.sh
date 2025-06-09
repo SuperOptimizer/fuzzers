@@ -8,6 +8,7 @@ sudo apt-get install -y ninja-build # for QEMU mode
 sudo apt-get install -y cpio libcapstone-dev # for Nyx mode
 sudo apt-get install -y wget curl # for Frida mode
 sudo apt-get install -y python3-pip # for Unicorn mode
+sudo apt install gcc-multilib g++-multilib libc6-dev-i386 lib32z1-dev lib32ncurses-dev lib32stdc++6
 git clone https://github.com/AFLplusplus/AFLplusplus
 cd AFLplusplus
 CC=clang CXX=clang++ make source-only PERFORMANCE=1 STATIC=1 NO_NYX=1 NO_CORESIGHT=1 NO_UNICORN_ARM64=1 AFL_NO_X86=1
