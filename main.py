@@ -15,11 +15,10 @@ if "nofuzz" in sys.argv:
     VARIANTS = {"nosan"}
 else:
     VARIANTS = sorted([
-        "nofuzz",
         "noopt",
         "nosan",
         "asan",
-        #"msan",
+        "msan",
         #"tsan",
         "ubsan",
         #"leak",
