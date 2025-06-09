@@ -15,6 +15,7 @@ if "nofuzz" in sys.argv:
     VARIANTS = {"nosan"}
 else:
     VARIANTS = sorted([
+        "nofuzz",
         "noopt",
         "nosan",
         "asan",
@@ -42,6 +43,7 @@ def build_variant(path: str, variant: str, extra_flags: dict):
     build_path.parent.mkdir(exist_ok=True)
 
     sanitize_flags = {
+        "nofuzz": "",
         "noopt": "",
         "nosan": "",
         "asan": "-fsanitize=address -fsanitize-address-use-after-return=always -fsanitize-address-use-after-scope  ",
@@ -67,7 +69,7 @@ def build_variant(path: str, variant: str, extra_flags: dict):
     ccflags =   f" -w -g3 -march=native  -fno-omit-frame-pointer "
     linkflags = f"    -g3 -fuse-ld=lld  -fno-omit-frame-pointer -Wl,--threads=32 "
 
-    if "nosanitize" not in sys.argv:
+    if "nosan" not in sys.argv or "nosan" in variant:
         ccflags +=   f" -fno-sanitize-recover=all {sanitize_string} "
         linkflags += f" -fno-sanitize-recover=all {sanitize_string} "
 
@@ -80,7 +82,7 @@ def build_variant(path: str, variant: str, extra_flags: dict):
         ccflags += " -flto=full "
         linkflags += " -flto=full "
 
-    if "nofuzz" in sys.argv:
+    if "nofuzz" in sys.argv or "nofuzz" in variant:
         cc = "clang"
         cxx = "clang++"
         ccflags += f" -DNOFUZZ "
@@ -112,6 +114,7 @@ def build_variant(path: str, variant: str, extra_flags: dict):
     }
 
     env_vars = {
+        "nofuzz": {},
         "nosan": {},
         "noopt": {},
         "asan": {"AFL_USE_ASAN": "1"},
