@@ -105,9 +105,9 @@ class TinyModelGenerator:
                 config_class=MistralConfig,
                 model_class=MistralForCausalLM,
                 vocab_size=64,  # Increased for better tokenizer stability
-                hidden_size=256,
-                intermediate_size=512,
-                num_hidden_layers=4,
+                hidden_size=64,
+                intermediate_size=128,
+                num_hidden_layers=2,
                 num_attention_heads=4,
                 num_key_value_heads=2,  # GQA
                 extra_config={
@@ -143,11 +143,11 @@ class TinyModelGenerator:
                 config_class=GemmaConfig,
                 model_class=GemmaForCausalLM,
                 vocab_size=64,  # Increased for better tokenizer stability
-                hidden_size=256,
-                intermediate_size=512,
-                num_hidden_layers=4,
-                num_attention_heads=4,
-                num_key_value_heads=4,
+                hidden_size=128,
+                intermediate_size=64,
+                num_hidden_layers=2,
+                num_attention_heads=2,
+                num_key_value_heads=2,
                 extra_config={
                     "torch_dtype": "float32",
                     "use_cache": True,
