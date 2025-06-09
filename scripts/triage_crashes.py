@@ -14,8 +14,9 @@ def triage_afl_crashes(input_dir, executable):
                                  stderr=subprocess.PIPE, timeout=10)
             if ret.returncode != 0:
                 # print(f"triaging {input_dir}/{path}")
-                stdout = ret.stdout.decode('ascii')
-                stderr = ret.stderr.decode('ascii')
+                if "verbose" in sys.argv:
+                    stdout = ret.stdout.decode('ascii')
+                    stderr = ret.stderr.decode('ascii')
                 if "asan" in executable and "AddressSanitizer" in stdout or "AddressSanitizer" in stderr:
                     print(f"triaging {input_dir}/{path}")
                     print(stdout)
@@ -30,8 +31,8 @@ def triage_afl_crashes(input_dir, executable):
 
 
 def main():
-    if len(sys.argv) != 3:
-        print("Usage: python script.py <pocs_dir> <executable_path>")
+    if len(sys.argv) not in [3,4]:
+        print("Usage: python script.py <pocs_dir> <executable_path> <verbose> ")
         sys.exit(1)
     input_dir = sys.argv[1]
     executable = sys.argv[2]
