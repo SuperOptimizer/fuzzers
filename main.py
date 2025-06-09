@@ -66,8 +66,8 @@ def build_variant(path: str, variant: str, extra_flags: dict):
     sanitize_string = sanitize_flags[variant]
 
     #-stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind
-    ccflags =   f" -m32  -w -g3 -march=native  -fno-omit-frame-pointer "
-    linkflags = f" -m32   -g3 -fuse-ld=lld  -fno-omit-frame-pointer -Wl,--threads=32 "
+    ccflags =   f"  -w -Wno-error -g3 -march=native  -fno-omit-frame-pointer "
+    linkflags = f"    -g3 -fuse-ld=lld  -fno-omit-frame-pointer -Wl,--threads=32 "
 
     if "nosan" not in sys.argv or "nosan" in variant:
         ccflags +=   f" -fno-sanitize-recover=all {sanitize_string} "
@@ -214,10 +214,12 @@ def llama_cpp():
         "LLAMA_BUILD_EXAMPLES":"OFF",
         "LLAMA_BUILD_TESTS":"ON",
         "GGML_CPU_AARCH64":"OFF",
+        "GGML_BMI2":"ON",
+        "GGML_SSE42":"ON",
         "GGML_AVX":"ON",
         "GGML_AVX2":"ON",
-        "GGML_FMA":"OFF",
-        "GGML_F16C":"OFF",
+        "GGML_FMA":"ON",
+        "GGML_F16C":"ON",
         "GGML_LASX":"OFF",
         "GGML_LSX":"OFF",
         "GGML_RVV":"OFF",
@@ -225,10 +227,9 @@ def llama_cpp():
         "GGML_ACCELERATE":"OFF",
         "GGML_BLAS":"OFF",
         "GGML_LLAMAFILE":"OFF",
-        "GGML_OPENMP":"OFF",
+        "GGML_OPENMP":"ON",
         "GGML_OPENCL_EMBED_KERNELS":"OFF",
         "LLAMA_CURL":"OFF",
-        "FUZZ":"ON" if "nofuzz" not in sys.argv else "OFF",
     }
     build_target("targets/llama.cpp", VARIANTS, extra_flags)
 
