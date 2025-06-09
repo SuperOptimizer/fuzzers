@@ -24,7 +24,9 @@ else:
         #"leak",
         #"cfisan",
         "laf",
+        "laf_noopt",
         "redqueen",
+        "redqueen_noopt",
         "sand_asan",
         "sand_msan",
         #"sand_tsan",
@@ -50,6 +52,8 @@ def build_variant(path: str, variant: str, extra_flags: dict):
         "leak": "-fsanitize=leak",
         "laf": "",
         "redqueen": "",
+        "laf_noopt": "",
+        "redqueen_noopt": "",
         "sand_asan": " -fsanitize=address -fsanitize-address-use-after-return=always -fsanitize-address-use-after-scope  ",
         "sand_msan": "-fsanitize=memory",
         "sand_tsan": "-fsanitize=thread",
@@ -59,21 +63,22 @@ def build_variant(path: str, variant: str, extra_flags: dict):
     }
     sanitize_string = sanitize_flags[variant]
 
-    ccflags =   f" -w -g3 -march=native -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind -fno-omit-frame-pointer "
-    linkflags = f"    -g3 -fuse-ld=lld  -stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind -fno-omit-frame-pointer -Wl,--threads=32 "
+    #-stdlib=libc++ --rtlib=compiler-rt -unwind=libunwind
+    ccflags =   f" -w -g3 -march=native  -fno-omit-frame-pointer "
+    linkflags = f"    -g3 -fuse-ld=lld  -fno-omit-frame-pointer -Wl,--threads=32 "
 
     if "nosanitize" not in sys.argv:
         ccflags +=   f" -fno-sanitize-recover=all {sanitize_string} "
         linkflags += f" -fno-sanitize-recover=all {sanitize_string} "
 
-    if "nolto" in sys.argv or variant == "noopt":
+    if "nolto" in sys.argv:
         cc = "afl-clang-fast"
         cxx = "afl-clang-fast++"
     else:
-        cc = "afl-clang-lto"
-        cxx = "afl-clang-lto++"
-        ccflags +=   " -flto=full -O3 "
-        linkflags += " -flto=full -Wl,-O3 "
+        cc = "afl-clang-lto  "
+        cxx = "afl-clang-lto++ "
+        ccflags += " -flto=full "
+        linkflags += " -flto=full "
 
     if "nofuzz" in sys.argv:
         cc = "clang"
@@ -83,8 +88,11 @@ def build_variant(path: str, variant: str, extra_flags: dict):
             ccflags += ' -pg '
             linkflags += ' -pg '
 
-    if "variant" == "noopt":
+    if "noopt" in variant or "noopt" in sys.argv:
         ccflags += " -O0 "
+    else:
+        ccflags +=   " -O3 "
+        linkflags += " -Wl,-O3 "
 
     ccflags += f" -DFUZZING_UNIQUE=\"{''.join(random.choice(string.ascii_letters) for _ in range(32))}\" "
     if "unstable" in sys.argv:
@@ -113,8 +121,9 @@ def build_variant(path: str, variant: str, extra_flags: dict):
         "ubsan": {"AFL_USE_UBSAN":"1", "AFL_UBSAN_VERBOSE":"1"},
         "leak": {"AFL_USE_LEAK":"1"},
         "laf": {"AFL_LLVM_LAF_ALL": "1"},
+        "laf_noopt": {"AFL_LLVM_LAF_ALL": "1"},
         "redqueen": {"AFL_LLVM_CMPLOG": "1"},
-
+        "redqueen_noopt": {"AFL_LLVM_CMPLOG": "1"},
 
         "sand_asan": {"AFL_USE_ASAN": "1", "AFL_SAN_NO_INST":"1"},
         "sand_msan": {"AFL_USE_MSAN": "1","AFL_SAN_NO_INST":"1"},
@@ -230,7 +239,7 @@ def gen_commands(target, corpus, out, executable):
 
     # Create the tmux session with the first (main) command
     main_cmd = fmt_str.format(
-        env_args="", timeout=100, M_or_S="-M", mem_limit_str="",
+        env_args="AFL_NO_STARTUP_CALIBRATION=1 ", timeout=100, M_or_S="-M", mem_limit_str="",
         variant="main", redqueen_str="", sand_str="", afl_args="",
         corpus=corpus, out=out,
         executable=f"./targets/{target}/build_nosan/{executable}"
@@ -243,12 +252,8 @@ def gen_commands(target, corpus, out, executable):
 
     for variant in VARIANTS:
         num_procs = 1
-        if "redqueen" in variant:
-            num_procs = 3
-        elif "laf" in variant:
-            num_procs = 3
         for i in range(num_procs):
-            env_args = ""
+            env_args = "AFL_NO_STARTUP_CALIBRATION=1 "
             afl_args = ""
             sand_str = ""
             redqueen_str = ""
@@ -351,7 +356,7 @@ if __name__ == "__main__":
     print(sys.argv)
     if "ggml" in sys.argv:
         if "commandsonly" in sys.argv:
-            print(gen_commands("ggml","corpus/gguf","out","bin/test-fuzz-mnist"))
+            print(gen_commands("ggml","corpus/gguf","out","bin/test-fuzz"))
             sys.exit(0)
         ggml()
     if "llama.cpp" in sys.argv:
